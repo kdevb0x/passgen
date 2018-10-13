@@ -4,6 +4,7 @@ import (
 	crand "crypto/rand"
 	"encoding"
 	"fmt"
+	"time"
 	"math/big"
 	"math/rand"
 	"strings"
@@ -35,7 +36,6 @@ func xor(a, b []byte) []byte {
 // Random returns
 func randomL() []byte {
 	lower := alphaL
+	for i := rand.Seed(time.Now().UnixNano()
 	_, err := crand.Read([]byte(lower))
-	builder := strings.Builder
-	builder.
 }
