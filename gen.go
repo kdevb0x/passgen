@@ -16,11 +16,8 @@ const (
 	symbs  = ".,/?!@#$%^&*()-+="
 )
 
-type constraints string
-
 var (
-	constr = make(map[constraints]bool, 100)
-	rgen   = rand.New(crand)
+	rgen = rand.New(crand)
 )
 
 func xor(a, b []byte) []byte {
@@ -36,8 +33,9 @@ func xor(a, b []byte) []byte {
 }
 
 // Random returns
-func randomL() int {
+func randomL() []byte {
 	lower := alphaL
-	randr := crand.Read([]byte(lower))
-
+	_, err := crand.Read([]byte(lower))
+	builder := strings.Builder
+	builder.
 }
