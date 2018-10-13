@@ -1,13 +1,15 @@
 package main
 
 import (
+	"builtin"
 	crand "crypto/rand"
 	"encoding"
 	"fmt"
-	"time"
 	"math/big"
 	"math/rand"
 	"strings"
+	"time"
+	"unsafe"
 )
 
 const (
@@ -33,9 +35,38 @@ func xor(a, b []byte) []byte {
 	return result
 }
 
-// Random returns
+// randomL returns a single lowercase english letter in the range of a-z
 func randomL() []byte {
-	lower := alphaL
-	for i := rand.Seed(time.Now().UnixNano()
-	_, err := crand.Read([]byte(lower))
+	lower := strings.NewReader(alphaL)
+
+	var runelen, _, _ = lower.ReadRune()
+	var runesize = unsafe.Sizeof(runelen)
+	newchar := make([]byte, builtin.IntegerType(runesize))
+
+	var bgint big.Int
+	bgint.SetInt64(len(alphaL))
+
+	gen := crand.Int(&bgint)
+	newchar = append(newchar, []byte(alphaL[gen.Int64()]))
+
+	return newchar
+
+}
+
+// randomU returns a single uppercase english letter in the range of A-Z
+func randomU() []byte {
+	upper := strings.NewReader(alphaU)
+
+	var runelen, _, _ = lower.ReadRune()
+	var runesize = unsafe.Sizeof(runelen)
+	newchar := make([]byte, builtin.IntegerType(runesize))
+
+	var bgint big.Int
+	bgint.SetInt64(len(alphaU))
+
+	gen := crand.Int(&bgint)
+	newchar = append(newchar, []byte(alphaU[gen.Int64()]))
+
+	return newchar
+
 }
