@@ -1,9 +1,7 @@
 package main
 
 import (
-	"builtin"
 	crand "crypto/rand"
-	"encoding"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -41,7 +39,7 @@ func randomL() []byte {
 
 	var runelen, _, _ = lower.ReadRune()
 	var runesize = unsafe.Sizeof(runelen)
-	newchar := make([]byte, builtin.IntegerType(runesize))
+	newchar := make([]byte, int(runesize))
 
 	var bgint big.Int
 	bgint.SetInt64(len(alphaL))
