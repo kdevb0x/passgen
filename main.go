@@ -7,15 +7,13 @@ import (
 	mow "github.com/jawher/mow.cli"
 )
 
-var constraints = make(map[string]string, 10)
-
-var constr = map[string]string{"characters": "n", "uppercase": "n", "lowercase": "n", "numbers": "n"}
+var constraint = make(map[string]bool)
 
 /*
 func getflags() {
-	pflag.StringToStringVarP(&constraints, "include", "i", constr, `Elements to include in generation. Change to 'y' to include. Default options are: 'characters':'n', 'uppercase':'n', 'lowercase':'n', 'numbers':'n'`)
+        pflag.StringToStringVarP(&constraints, "include", "i", constr, `Elements to include in generation. Change to 'y' to include. Default options are: 'characters':'n', 'uppercase':'n', 'lowercase':'n', 'numbers':'n'`)
 
-	pflag.Parse()
+        pflag.Parse()
 }
 
 */
@@ -28,7 +26,9 @@ func setupApp() *mow.Cli {
 	app := cli.NewApp()
 	app.Name = "passgen"
 	app.Description = "A configurable constraint-based password string generator"
-	app.Flags = []cli.Flag{"L length", 8, "length of the generated password string"}
+	app.Flags = []cli.Flag{cli.Flag{"L length", 8, "length of the generated password string"}}
+
+	flag.Visit(func(f *flag.Flag) { constraint[f.Name] = true })
 }
 func main() {
 
