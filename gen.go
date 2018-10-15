@@ -101,7 +101,7 @@ func NewPassGen(strlen int) *passgen {
 	var bf = make([]byte, 1024)
 	gen := &passgen{
 		length:      strlen,
-		constraints: make(map[string]bool{classes[0]: true, classes[1]: false, classes[2]: false, classes[3]: false}),
+		constraints: constraint,
 		buff:        bf,
 		reader:      bytes.NewBuffer(buff),
 	}
@@ -110,6 +110,8 @@ func NewPassGen(strlen int) *passgen {
 }
 
 func (n *passgen) Generate() {
+
+
 	var include []string
 	for k, v := range n.constraints {
 		if v == true {
@@ -117,6 +119,9 @@ func (n *passgen) Generate() {
 		}
 	}
 	chanque := make([]<-chan []byte, len(include))
+
+	}
+
 	for _, i := range include {
 		switch i {
 		case "lowercase":
@@ -132,7 +137,6 @@ func (n *passgen) Generate() {
 			append(chanque, asyncRandomS())
 			break
 		default:
-			fmt.Printf("warning no constraints: can't generate a password string from nothing!")
 			return
 		}
 	}
