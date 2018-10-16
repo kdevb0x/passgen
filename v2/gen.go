@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -28,6 +29,32 @@ func checkConstraints(constraints map[string]bool) []int {
 		}
 	}
 }
-func GenerateChars(include []int) []byte {
+func generateChars(include []int) ([]byte, error) {
+	var passStr []byte
+	rand.Seed(time.Now().UnixNano())
 
+	for i := 0; i <= length; i++ {
+		j := rand.Intn(findHighest(include))
+	}
+}
+
+func findHighest(nums []int) int {
+	var high int
+	for _, m := range nums {
+		if m > high {
+			high = m
+		}
+	}
+	return high
+
+}
+
+func findLowest(nums []int) int {
+	var low int
+	for _, m := range nums {
+		if m < low {
+			low = m
+		}
+	}
+	return low
 }
