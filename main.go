@@ -1,16 +1,16 @@
-package main // import "github.com/kidoda/passgen"
+package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/codegangsta/cli"
 )
 
 // type flagList []string
-type flagList struct {
-	_ []string
-}
+type flagList []string
 
 var incFlagList flagList
 
@@ -35,7 +35,7 @@ func getflags() {
 */
 
 func execAction(ctx *cli.Context) error {
-
+	return nil
 }
 
 func getFlags() {
@@ -61,7 +61,7 @@ func main() {
 	case charclassLen > 4:
 		fmt.Printf("too many character classes given! Must be one of 'l,u,n,s' gave: %s", incFlagList)
 	default:
-		gen := NewPassGen(strlenFlag)
+		gen := newPassGen(strlenFlag)
 		gen.Generate()
 	}
 }

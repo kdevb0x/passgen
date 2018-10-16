@@ -1,21 +1,10 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	crand "crypto/rand"
-	"fmt"
-	"io"
-	"math/big"
 	"math/rand"
-	"strings"
-	"time"
-	"unsafe"
-
-	"github.com/codegangsta/cli"
 )
 
-const (
+var (
 	classes = []string{0: "lowercase", 1: "uppercase", 2: "numbers", 3: "symbols"}
 )
 
@@ -23,11 +12,7 @@ const (
 	lowercase = "abcdefghijklmnopqrstuvwxyz"
 	uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	numbers   = "1234567890"
-	symbols   = ".,/?!@#$%^&*()-+="
-)
-
-var (
-	rgen = newPassGen()
+	symbols   = "!@#$%&*"
 )
 
 type Generator interface {
@@ -39,7 +24,6 @@ type passgen struct {
 	length      int
 	constraints map[string]bool
 	buff        []byte
-	reader      io.Reader
 }
 
 func xor(a, b []byte) []byte {
@@ -55,55 +39,68 @@ func xor(a, b []byte) []byte {
 }
 
 // randomL returns a single lowercase english letter in the range of a-z
-func randomL() []byte {
-	lower := strings.NewReader(lowercase)
+func (n passgen) randomL() func() []byte {
+	f := func() []byte {
 
-	var runelen, _, _ = lower.ReadRune()
-	var runesize = unsafe.Sizeof(runelen)
-	newchar := make([]byte, int(runesize))
+		newchar := make([]byte, 1)
+		rnum := rand.Intn(len(lowercase))
+		newchar = append(newchar, lowercase[rnum-1])
 
-	var bgint big.Int
-	bgint.SetInt64(len(lowercase))
-
-	gen := crand.Int(&bgint)
-	newchar = append(newchar, []byte(lowercase[gen.Int64()]))
-
-	return newchar
-
+		return newchar
+	}
+	return f
 }
 
 // randomU returns a single uppercase english letter in the range of A-Z
-func randomU() []byte {
-	upper := strings.NewReader(uppercase)
+func (n passgen) randomU() func() []byte {
+	f := func() []byte {
 
-	var runelen, _, _ = lower.ReadRune()
-	var runesize = unsafe.Sizeof(runelen)
-	newchar := make([]byte, builtin.IntegerType(runesize))
+		newchar := make([]byte, 1)
+		rnum := rand.Intn(len(uppercase))
+		newchar = append(newchar, uppercase[rnum-1])
 
-	var bgint big.Int
-	bgint.SetInt64(len(uppercase))
+		return newchar
+	}
+	return f
+}
 
-	gen := crand.Int(&bgint)
-	newchar = append(newchar, []byte(uppercase[gen.Int64()]))
+func (n passgen) randomN() func() []byte {
+	f := func() []byte {
 
-	return newchar
+		newchar := make([]byte, 1)
+		rnum := rand.Intn(len(numbers))
+		newchar = append(newchar, numbers[rnum-1])
 
+		return newchar
+	}
+	return f
+}
+
+func (n passgen) randomS() func() []byte {
+	f := func() []byte {
+
+		newchar := make([]byte, 1)
+		rnum := rand.Intn(len(symbols))
+		newchar = append(newchar, symbols[rnum-1])
+
+		return newchar
+	}
+	return f
 }
 
 // NewGenerator creates an empty Generator interface
 func NewGenerator() Generator {
 	var gen = new(Generator)
-	return gen
+	return *gen
 }
 
 // newPassGen returns a pointer to a newly created passgen
-func NewPassGen(strlen int) *passgen {
+func newPassGen(strlen int) *passgen {
 	var bf = make([]byte, 1024)
 	gen := &passgen{
 		length:      strlen,
 		constraints: constraint,
 		buff:        bf,
-		reader:      bytes.NewBuffer(buff),
 	}
 
 	return gen
@@ -111,33 +108,41 @@ func NewPassGen(strlen int) *passgen {
 
 func (n *passgen) Generate() {
 
-
 	var include []string
 	for k, v := range n.constraints {
 		if v == true {
-			append(include, k)
+			include = append(include, k)
 		}
 	}
-	chanque := make([]<-chan []byte, len(include))
-
-	}
+	var fnque []func() []byte
 
 	for _, i := range include {
 		switch i {
 		case "lowercase":
-			append(chanque, asyncRandomL())
+			_ = append(fnque, n.randomL())
 			break
 		case "uppercase":
-			append(chanque, asyncRandomU())
+			_ = append(fnque, n.randomU())
 			break
 		case "numbers":
-			append(chanque, asyncRandomN())
+			_ = append(fnque, n.randomN())
 			break
 		case "symbols":
-			append(chanque, asyncRandomS())
+			_ = append(fnque, n.randomS())
 			break
 		default:
-			return
+
 		}
 	}
+	// pick which type of character to generate at random
+	for i, j := 0, rand.Intn(len(fnque)); i <= n.length; i++ {
+		n.buff[i] = fnque[j]()[0]
+	}
+}
+
+func (n passgen) String() string {
+	var ln = len(n.buff)
+	stb := string(n.buff[:ln])
+	return stb
+
 }
