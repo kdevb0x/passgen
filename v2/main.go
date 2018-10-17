@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -28,12 +29,27 @@ var (
 func getFlags() {
 	flag.IntVar(&length, "L length", 1, "`length` of the generated output string")
 
-	var include flagList
 	flag.Var(&includeFlags, "I include", "character `classes` to include in the generation")
 	flag.Parse()
 
-	// flag.Visit(func(f *flag.Flag) { constraint[f.Name] = true })
-
+	chars := strings.Split(includeFlags.String(), "")
+	for _, con := range chars {
+		switch con {
+		case "l":
+			constraints["lower"] = true
+		case "u":
+			constraints["upper"] = true
+		case "n":
+			constraints["number"] = true
+		case "s":
+			constraints["symbol"] = true
+		default:
+			fmt.Printf("include must be one or more of: {l|u|n|s} gave: %s", []string(includeFlags))
+			flag.Usage()
+			os.Exit(1)
+		}
+		// flag.Visit(func(f *flag.Flag) { constraint[f.Name] = true })
+	}
 	return
 }
 
@@ -41,12 +57,11 @@ func main() {
 	getFlags()
 
 	cons := checkConstraints(constraints)
-	if len(constraints) <= 0 {
-		log.Fatal("no constraints given!")
-	}
-
-	pass, err := generateChars(cons)
+	pass, err := buildString(generateChars(cons))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println(pass)
+	os.Exit(0)
 }
