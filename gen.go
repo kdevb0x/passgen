@@ -45,7 +45,7 @@ func generateChars(include []int) []string {
 	rand.Seed(time.Now().UnixNano())
 
 	for i := 0; i < length; i++ {
-		j := rand.Intn(findHighest(include))
+		j := rand.Intn(len(include) - 1)
 		passStr[i] = strconv.Itoa(include[j])
 	}
 	return passStr
