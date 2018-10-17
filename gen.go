@@ -61,23 +61,3 @@ func buildString(from []string) (string, error) {
 	}
 	return builder.String(), nil
 }
-func findHighest(nums []int) int {
-	var high int
-	for _, m := range nums {
-		if m > high {
-			high = m
-		}
-	}
-	return high
-
-}
-
-func findLowest(nums []int) int {
-	var low int
-	for _, m := range nums {
-		if m < low {
-			low = m
-		}
-	}
-	return low
-}
