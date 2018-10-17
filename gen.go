@@ -2,147 +2,82 @@ package main
 
 import (
 	"math/rand"
+	"strconv"
+	"strings"
+	"time"
 )
 
-var (
-	classes = []string{0: "lowercase", 1: "uppercase", 2: "numbers", 3: "symbols"}
-)
+var constraints = make(map[string]bool)
 
-const (
-	lowercase = "abcdefghijklmnopqrstuvwxyz"
-	uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	numbers   = "1234567890"
-	symbols   = "!@#$%&*"
-)
-
-type Generator interface {
-	Generate()
-	String() string
-}
-
-type passgen struct {
-	length      int
-	constraints map[string]bool
-	buff        []byte
-}
-
-func xor(a, b []byte) []byte {
-	if len(a) != len(b) {
-		panic("xor: not equal lengths")
-	}
-
-	result := make([]byte, len(a))
-	for i, j := range a {
-		result[i] = a[i] ^ b[i]
-	}
-	return result
-}
-
-// randomL returns a single lowercase english letter in the range of a-z
-func (n passgen) randomL() func() []byte {
-	f := func() []byte {
-
-		newchar := make([]byte, 1)
-		rnum := rand.Intn(len(lowercase))
-		newchar = append(newchar, lowercase[rnum-1])
-
-		return newchar
-	}
-	return f
-}
-
-// randomU returns a single uppercase english letter in the range of A-Z
-func (n passgen) randomU() func() []byte {
-	f := func() []byte {
-
-		newchar := make([]byte, 1)
-		rnum := rand.Intn(len(uppercase))
-		newchar = append(newchar, uppercase[rnum-1])
-
-		return newchar
-	}
-	return f
-}
-
-func (n passgen) randomN() func() []byte {
-	f := func() []byte {
-
-		newchar := make([]byte, 1)
-		rnum := rand.Intn(len(numbers))
-		newchar = append(newchar, numbers[rnum-1])
-
-		return newchar
-	}
-	return f
-}
-
-func (n passgen) randomS() func() []byte {
-	f := func() []byte {
-
-		newchar := make([]byte, 1)
-		rnum := rand.Intn(len(symbols))
-		newchar = append(newchar, symbols[rnum-1])
-
-		return newchar
-	}
-	return f
-}
-
-// NewGenerator creates an empty Generator interface
-func NewGenerator() Generator {
-	var gen = new(Generator)
-	return *gen
-}
-
-// newPassGen returns a pointer to a newly created passgen
-func newPassGen(strlen int) *passgen {
-	var bf = make([]byte, 1024)
-	gen := &passgen{
-		length:      strlen,
-		constraints: constraint,
-		buff:        bf,
-	}
-
-	return gen
-}
-
-func (n *passgen) Generate() {
-
-	var include []string
-	for k, v := range n.constraints {
+func checkConstraints(constraints map[string]bool) []int {
+	var masterInclude = make([]int, 26+26+10+8)
+	for k, v := range constraints {
 		if v == true {
-			include = append(include, k)
+			switch k {
+			case "symbol":
+				// 33-38, 42, and 64
+				for i := 33; i < 39; i++ {
+					masterInclude = append(masterInclude, i)
+				}
+				masterInclude = append(masterInclude, 42, 64)
+			case "number":
+				// 48-57
+				for i := 48; i < 58; i++ {
+					masterInclude = append(masterInclude, i)
+				}
+			case "upper":
+				// 65-90
+				for i := 65; i < 91; i++ {
+					masterInclude = append(masterInclude, i)
+				}
+			case "lower":
+				// include 97..122 (a-z)
+				for i := 97; i < 123; i++ {
+					masterInclude = append(masterInclude, i)
+				}
+			}
 		}
 	}
-	var fnque []func() []byte
+	return masterInclude
+}
+func generateChars(include []int) []string {
+	var passStr []string
+	rand.Seed(time.Now().UnixNano())
 
-	for _, i := range include {
-		switch i {
-		case "lowercase":
-			_ = append(fnque, n.randomL())
-			break
-		case "uppercase":
-			_ = append(fnque, n.randomU())
-			break
-		case "numbers":
-			_ = append(fnque, n.randomN())
-			break
-		case "symbols":
-			_ = append(fnque, n.randomS())
-			break
-		default:
-
-		}
+	for i := 0; i < length; i++ {
+		j := rand.Intn(findHighest(include))
+		passStr[i] = strconv.Itoa(include[j])
 	}
-	// pick which type of character to generate at random
-	for i, j := 0, rand.Intn(len(fnque)); i <= n.length; i++ {
-		n.buff[i] = fnque[j]()[0]
-	}
+	return passStr
 }
 
-func (n passgen) String() string {
-	var ln = len(n.buff)
-	stb := string(n.buff[:ln])
-	return stb
+func buildString(from []string) (string, error) {
+	var builder strings.Builder
+	for _, char := range from {
+		_, err := builder.WriteString(char)
+		if err != nil {
+			return "", err
+		}
+	}
+	return builder.String(), nil
+}
+func findHighest(nums []int) int {
+	var high int
+	for _, m := range nums {
+		if m > high {
+			high = m
+		}
+	}
+	return high
 
+}
+
+func findLowest(nums []int) int {
+	var low int
+	for _, m := range nums {
+		if m < low {
+			low = m
+		}
+	}
+	return low
 }
