@@ -23,6 +23,18 @@ func (f *flagList) String() string {
 	return fmt.Sprintf("%v", *f)
 }
 */
+const usageString = `Usage:  passgen [OPTION]... [FILE]...
+passgen is a simple, configurable password generator written in Go.
+
+Available Options:
+	-i, --include <TYPES>    character types to include
+	-l, --length [LENGTH]    desired length of output string
+	-o, --output <FILE>	 save output string to FILE
+
+	-h, --help 		 help information (this screen)
+
+TYPES must be one or more of [l]owercase, [u]ppercase, [n]umbers, or [s]ymbols.
+(meaning: a-z, A-Z, 0-9, )`
 
 var (
 	usage        = flag.PrintDefaults
