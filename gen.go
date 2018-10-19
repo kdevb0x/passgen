@@ -43,7 +43,6 @@ func checkConstraints(constraints map[string]bool) []int {
 			}
 		}
 	}
-	println(masterInclude, len(masterInclude))
 	return masterInclude
 }
 func generateChars(include []int) []string {
@@ -53,6 +52,10 @@ func generateChars(include []int) []string {
 	for i := 0; i < length; i++ {
 		j := rand.Intn(len(include) - 1)
 		passStr[i] = string(include[j])
+	}
+	for _, val := range passStr {
+		var incl, incu, incn, incs bool
+		if strings.ContainsAny(val, allclasses)
 	}
 	return passStr
 }
