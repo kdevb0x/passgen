@@ -7,6 +7,13 @@ import (
 	"time"
 )
 
+const (
+	verifyL = "abcdefghijklmnopqrstuvwxyz"
+	verifyU = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	verifyN = "1234567890"
+	verifyS = "!@#$%&*"
+)
+
 var constraints = make(map[string]bool)
 
 func checkConstraints(constraints map[string]bool) []int {
@@ -15,11 +22,11 @@ func checkConstraints(constraints map[string]bool) []int {
 		if v == true {
 			switch k {
 			case "symbol":
-				// 33-38, 42, and 64
-				for i := 33; i < 39; i++ {
+				// 33, 35-38, 42, and 64
+				for i := 35; i < 39; i++ {
 					masterInclude = append(masterInclude, i)
 				}
-				masterInclude = append(masterInclude, 42, 64)
+				masterInclude = append(masterInclude, 33, 42, 64)
 				break
 			case "number":
 				// 48-57
@@ -45,18 +52,55 @@ func checkConstraints(constraints map[string]bool) []int {
 	}
 	return masterInclude
 }
+
+// checkRegen verifies a []string contains at least 1 char from every character class
+func checkRegen(passStr []string, classes *map[string]bool) (regen bool) {
+	for cls, v := range *classes { // check what classes should be included
+		if v == true {
+
+			for _, val := range passStr {
+				switch cls {
+				case "lower":
+					if ok := strings.ContainsAny(val, verifyL); !ok {
+						regen = true
+					}
+				case "upper":
+					if ok := strings.ContainsAny(val, verifyL); !ok {
+						regen = true
+					}
+				case "number":
+					if ok := strings.ContainsAny(val, verifyL); !ok {
+						regen = true
+					}
+				case "symbol":
+					if ok := strings.ContainsAny(val, verifyL); !ok {
+						regen = true
+					}
+				}
+			}
+		}
+
+	}
+	regen = false
+	return
+}
 func generateChars(include []int) []string {
-	var passStr = make([]string, length+1)
+	var passStr []string
 	rand.Seed(time.Now().UnixNano())
 
-	for i := 0; i < length; i++ {
-		j := rand.Intn(len(include) - 1)
-		passStr[i] = string(include[j])
+again:
+	if len(include) > 0 {
+		for i := 0; i < length; i++ {
+			j := rand.Intn(len(include) - 1)
+			passStr[i] = string(include[j])
+		}
 	}
-	for _, val := range passStr {
-		var incl, incu, incn, incs bool
-		if strings.ContainsAny(val, allclasses)
+
+	// verify passStr includes at least 1 of all character classes
+	if regen := checkRegen(passStr, &constraints); regen {
+		goto again
 	}
+
 	return passStr
 }
 
