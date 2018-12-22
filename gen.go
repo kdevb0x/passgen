@@ -9,7 +9,7 @@ import (
 
 const (
 	verifyL = "abcdefghijklmnopqrstuvwxyz"
-	verifyU = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	verifyC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	verifyN = "1234567890"
 	verifyS = "!@#$%&*"
 )
@@ -35,7 +35,7 @@ func checkConstraints(constraints map[string]bool) []int {
 					masterInclude = append(masterInclude, i)
 				}
 				break
-			case "upper":
+			case "capitol":
 				// 65-90
 				for i := 65; i < 91; i++ {
 					masterInclude = append(masterInclude, i)
@@ -55,6 +55,7 @@ func checkConstraints(constraints map[string]bool) []int {
 
 // checkRegen verifies a []string contains at least 1 char from every character class
 func checkRegen(passStr []string, classes *map[string]bool) (regen bool) {
+	regen = false
 	for cls, v := range *classes { // check what classes should be included
 		if v == true {
 
@@ -64,16 +65,16 @@ func checkRegen(passStr []string, classes *map[string]bool) (regen bool) {
 					if ok := strings.ContainsAny(val, verifyL); !ok {
 						regen = true
 					}
-				case "upper":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
+				case "capitol":
+					if ok := strings.ContainsAny(val, verifyC); !ok {
 						regen = true
 					}
 				case "number":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
+					if ok := strings.ContainsAny(val, verifyN); !ok {
 						regen = true
 					}
 				case "symbol":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
+					if ok := strings.ContainsAny(val, verifyS); !ok {
 						regen = true
 					}
 				}
@@ -81,9 +82,10 @@ func checkRegen(passStr []string, classes *map[string]bool) (regen bool) {
 		}
 
 	}
-	regen = false
+
 	return
 }
+
 func generateChars(include []int) []string {
 	var passStr []string
 	rand.Seed(time.Now().UnixNano())
@@ -96,9 +98,11 @@ again:
 		}
 	}
 
-	// verify passStr includes at least 1 of all character classes
-	if regen := checkRegen(passStr, &constraints); regen {
-		goto again
+	if verify == true {
+		// verify passStr includes at least 1 of all character classes
+		if regen := checkRegen(passStr, &constraints); regen == true {
+			goto again
+		}
 	}
 
 	return passStr
@@ -107,7 +111,7 @@ again:
 func buildString(from []string) (string, error) {
 	var builder strings.Builder
 	for _, char := range from {
-		_, err := builder.WriteString(string(char))
+		_, err := builder.WriteString(char)
 		if err != nil {
 			return "", err
 		}

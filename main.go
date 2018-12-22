@@ -65,8 +65,8 @@ func getFlags() {
 			switch con {
 			case "l":
 				constraints["lower"] = true
-			case "u":
-				constraints["upper"] = true
+			case "c":
+				constraints["capitol"] = true
 			case "n":
 				constraints["number"] = true
 			case "s":
@@ -83,13 +83,7 @@ func getFlags() {
 }
 
 func main() {
-	if filepath != "" {
-		file, err := os.Create(filepath)
-		if err != nil {
-			log.Fatal("Error creating output file:", err)
-		}
-		defer file.Close()
-	}
+
 	getFlags()
 
 	cons := checkConstraints(constraints)
@@ -100,12 +94,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if outfile != nil {
+	if filepath != "" {
+		outfile, err := os.Create(filepath)
+		if err != nil {
+			log.Fatal("Error creating output file:", err)
+		}
+		defer outfile.Close()
 		n, err := outfile.WriteString(pass)
 		if err != nil || n < len(pass) {
 			log.Fatal("error writing generated string to file!:", err)
 		}
-		defer outfile.Close()
 	}
 	if silent == false {
 		fmt.Println(pass)
