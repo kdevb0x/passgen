@@ -11,3 +11,13 @@ import (
 func TestEncryptAES(t *testing.T) {
 
 }
+
+func TestHashBcrypt(t *testing.T) {
+	var pw = NewPW(nil)
+	pwhash := HashBcrypt(pw)
+}
+
+func TestNewPW(t *testing.T) {
+	pwstring := []byte("testpw")
+	hash := NewPW(pwstring)
+}
