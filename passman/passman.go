@@ -4,6 +4,12 @@
 
 package passman
 
+import (
+	"log"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
 // Refs holds the references to user accounts that a PW is associated with
 type Refs map[string][]string
 
@@ -16,4 +22,14 @@ type PW struct {
 func NewPW(hashedPass []byte) *PW {
 	pw := &PW{PWHash: hashedPass}
 	return pw
+}
+
+func (p *PW) HashBcrypt() error {
+	newpw, err := bcrypt.GenerateFromPassword(p.PWHash, bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("unable to hash with bcrypt: %s\n", err)
+		return err
+	}
+	p.PWHash = newpw
+	return nil
 }

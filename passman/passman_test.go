@@ -14,10 +14,15 @@ func TestEncryptAES(t *testing.T) {
 
 func TestHashBcrypt(t *testing.T) {
 	var pw = NewPW(nil)
-	pwhash := HashBcrypt(pw)
+	if hasherr := pw.HashBcrypt(); hasherr != nil {
+		t.Fail()
+	}
 }
 
 func TestNewPW(t *testing.T) {
 	pwstring := []byte("testpw")
 	hash := NewPW(pwstring)
+	if hash.PWHash == nil {
+		t.Fail()
+	}
 }
