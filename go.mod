@@ -4,6 +4,7 @@ require (
 	github.com/couchbase/gocb v1.5.2 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/uuid v1.1.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/opentracing/opentracing-go v1.0.2 // indirect
 	github.com/spf13/pflag v1.0.3
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9
