@@ -5,18 +5,19 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 
 	env "github.com/joho/godotenv"
 )
 
-var _ = env.Load(nil)
+var _ = env.Load("")
 
-func TestGetHostname(t *testing.T) {
-	hostname, err := getHostname() // err for .env file not found, etc.
-	if err != nil {
-		fmt.Errorf("error while fetching $HOSTNAME: %s, received $HOSTNAME value: %s\n", err, hostname)
+func TestDBConnect(t *testing.T) {
+	const LOCALDB = "couchbase://localhost"
+	if err := dbConnect(LOCALDB); err != nil {
+		t.Error(err)
+		t.Fail()
 	}
-
+	
 }
+

@@ -16,6 +16,8 @@ golang.org/x/net v0.0.0-20181220203305-927f97764cc3 h1:eH6Eip3UpmR+yM/qI9Ijluzb1
 golang.org/x/net v0.0.0-20181220203305-927f97764cc3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+gopkg.in/couchbase/gocb.v1 v1.5.2 h1:szkZ99TImKjtwx2vOdQ7zQ2va2DOfK0rEEYVBjR++mM=
+gopkg.in/couchbase/gocb.v1 v1.5.2/go.mod h1:Ri5Qok4ZKiwmPr75YxZ0uELQy45XJgUSzeUnK806gTY=
 gopkg.in/couchbase/gocbcore.v7 v7.1.10 h1:bfbOjShlCamkpv76t6UfBwroLB1oV9aRMcFXtbsua80=
 gopkg.in/couchbase/gocbcore.v7 v7.1.10/go.mod h1:48d2Be0MxRtsyuvn+mWzqmoGUG9uA00ghopzOs148/E=
 gopkg.in/couchbaselabs/gocbconnstr.v1 v1.0.2 h1:EJFMMmmXe0pF+AdSYdwQ050BVJHwpLmsEMTQoUAEFv8=
