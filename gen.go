@@ -27,26 +27,26 @@ func checkConstraints(constraints map[string]bool) []int {
 					masterInclude = append(masterInclude, i)
 				}
 				masterInclude = append(masterInclude, 33, 42, 64)
-				break
+				continue
 			case "number":
 				// 48-57
 				// TODO: change temp vars for each case.
 				for i := 48; i < 58; i++ {
 					masterInclude = append(masterInclude, i)
 				}
-				break
+				continue
 			case "upper":
 				// 65-90
 				for i := 65; i < 91; i++ {
 					masterInclude = append(masterInclude, i)
 				}
-				break
+				continue
 			case "lower":
 				// include 97..122 (a-z)
 				for i := 97; i < 123; i++ {
 					masterInclude = append(masterInclude, i)
 				}
-				break
+				continue
 			}
 		}
 	}
@@ -54,28 +54,29 @@ func checkConstraints(constraints map[string]bool) []int {
 }
 
 // checkRegen verifies a []string contains at least 1 char from every character class
+// this function returns true if it DOES NOT contain, and needs to be regenerated.
 func checkRegen(passStr []string, classes *map[string]bool) (regen bool) {
 	for cls, v := range *classes { // check what classes should be included
 		if v == true {
 
-			for _, val := range passStr {
-				switch cls {
-				case "lower":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
-						regen = true
-					}
-				case "upper":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
-						regen = true
-					}
-				case "number":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
-						regen = true
-					}
-				case "symbol":
-					if ok := strings.ContainsAny(val, verifyL); !ok {
-						regen = true
-					}
+			// for _, val := range passStr {
+			p := strings.Join(passStr, "")
+			switch cls {
+			case "lower":
+				if ok := strings.ContainsAny(p, verifyL); !ok {
+					regen = true
+				}
+			case "upper":
+				if ok := strings.ContainsAny(p, verifyL); !ok {
+					regen = true
+				}
+			case "number":
+				if ok := strings.ContainsAny(p, verifyL); !ok {
+					regen = true
+				}
+			case "symbol":
+				if ok := strings.ContainsAny(p, verifyL); !ok {
+					regen = true
 				}
 			}
 		}
@@ -85,7 +86,7 @@ func checkRegen(passStr []string, classes *map[string]bool) (regen bool) {
 	return
 }
 func generateChars(include []int) []string {
-	var passStr []string
+	var passStr = make([]string, length)
 	rand.Seed(time.Now().UnixNano())
 
 again:
@@ -101,7 +102,7 @@ again:
 		goto again
 	}
 
-	return passStr
+	return passStr[:]
 }
 
 func buildString(from []string) (string, error) {

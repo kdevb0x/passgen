@@ -4,37 +4,71 @@
 
 package customDB
 
-import "errors"
+import (
+	"errors"
+	"sync"
+)
 
-// DB is the databse api
+type status int
 
-type DB interface {
-	// TODO: describe the interface spec and guarentees
-}
+const (
+	_ status = iota
+	unlocked
+	locked
+	uninitialized
+)
 
-type encryptedBuffer struct {
+type EncryptedBuffer struct {
+	mu   *sync.Mutex
 	buff []byte
+	stat status
 }
 
-// NewEncryptedBuffer creates and initializes a new encryptedBuffer optionally
+// NewEncryptedBuffer creates and initializes a new EncryptedBuffer optionally
 // using buf as its initial contents. It takes ownership of buf, and the caller
 // should not use buf after this call.
-func NewEncryptedBuffer(buf ...[]byte) (*encryptedBuffer, error) {
+func NewEncryptedBuffer(buf ...[]byte) (*EncryptedBuffer, error) {
 	if len(buf) != 0 {
 		if len(buf) > 1 {
 			return nil, errors.New("buf must be a single []byte, or nil")
 		}
-		return &encryptedBuffer{buff: buf[0]}, nil
+		return &EncryptedBuffer{buff: buf[0]}, nil
 	}
-	return &encryptedBuffer{buff: make([]byte, 1024)}, nil
+	return &EncryptedBuffer{buff: make([]byte, 1024)}, nil
 
 }
 
-// Read implements the io.Reader interface. It copies len(p) bytes
-// into the buffer and returns the number of bytes written and nil error.
-func (e *encryptedBuffer) Read(p []byte) (n int, err error) {
+// Write appends len(p) bytes from p into e's buffer, growing buffer if needed,
+// then returns the new length of e.buff, and a nil error.
+func (e *EncryptedBuffer) Write(p []byte) (n int, err error) {
 	n = copy(e.buff, p)
 	return
 }
 
-func (e *encryptedBuffer) Bytes()
+func (e *EncryptedBuffer) Read(p []byte) (n int, err error) {
+	n = copy(p, e.buff[:])
+	return n, nil
+}
+
+func (e *EncryptedBuffer) Bytes() []byte {
+	return e.buff[:]
+}
+
+func (e *EncryptedBuffer) Reset() {
+	e.buff = e.buff[:0]
+}
+
+func (e *EncryptedBuffer) Unlock(key string) error {
+	if e.IsUnlocked {
+		return errors.New("EncryptedBuffer already unlocked")
+	}
+	e.stat = unlocked
+	return nil
+}
+
+func (e *EncryptedBuffer) IsUnlocked() bool {
+	if e.stat == unlocked {
+		return true
+	}
+	return false
+}

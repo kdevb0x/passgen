@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -22,6 +23,7 @@ Available Options:
 
     -q, --quiet 	     prevent echoing the generated string to the terminal
     -o, --output <FILE>	     save output string to FILE
+    -f, --force 	     if FILE exists, overwrite file instead of appending to the end (implies -o)
     -h, --help 		     help information (this screen)
 
 
@@ -42,9 +44,11 @@ var (
 	usage        = usageString
 	includeFlags []string
 	length       int
-	filepath     string
+	filepath     string // path for -o flag
+	forcef       bool
 	silent       bool
-	verify       bool
+	verify       bool // TODO: consider removing this and make it mandatory
+	//
 )
 
 func getFlags() {
@@ -52,14 +56,15 @@ func getFlags() {
 	pflag.StringArrayVarP(&includeFlags, "include", "i", []string{"l"}, "`character classes` to include in the generation")
 
 	pflag.StringVarP(&filepath, "output", "o", "", "write output string to given FILE")
+	pflag.BoolVarP(&forcef, "force", "f", false, "overwrite file instead of appending if it already exists (implies -o)")
 	pflag.BoolVarP(&silent, "quiet", "q", false, "suppress echoing of generated string to stdout")
-	pflag.BoolVarP(&verify, "verify", "v", false, "ensure that the generated string includes A͟T͟ ͟L͟E͟A͟S͟T͟ O͟N͟E͟ character from each group passed to [--include, -i]")
+	pflag.BoolVarP(&verify, "verify", "v", true, "ensure that the generated string includes A͟T͟ ͟L͟E͟A͟S͟T͟ O͟N͟E͟ character from each group passed to [--include, -i]")
 	pflag.Usage = func() {
 		fmt.Print(usage)
 	}
 	pflag.Parse()
 
-	for i := 0; i < len(includeFlags)-1; i++ {
+	for i := 0; i < len(includeFlags); i++ {
 		cons := strings.Split(includeFlags[i], "")
 		for _, con := range cons {
 			switch con {
@@ -71,6 +76,8 @@ func getFlags() {
 				constraints["number"] = true
 			case "s":
 				constraints["symbol"] = true
+			case " ":
+				continue
 			default:
 				fmt.Printf("%v: invalid argument", pflag.Args()[1:])
 				fmt.Print(usage)
@@ -81,15 +88,55 @@ func getFlags() {
 	}
 
 }
+func writeFile(pass string) error {
+	/*
+		var outfile *os.File
+
+
+		if filepath != "" {
+			outfile, err := os.Create(filepath)
+			if err != nil {
+				return fmt.Errorf("Error creating output file:", err)
+			}
+			defer outfile.Close()
+
+		}
+		if outfile != nil {
+			n, err := outfile.WriteString(pass)
+			if err != nil || n < len(pass) {
+				log.Fatal("error writing generated string to file!:", err)
+			}
+		}
+	*/
+	// if err := ioutil.WriteFile(filepath, []byte(pass), 0600); err != nil {
+	var f *os.File
+	f, err := os.Create(filepath)
+	if err != nil {
+		switch err {
+		case os.ErrExist:
+			fmt.Printf(`%s already exists, appending to end of file.
+			To overwrite instead, use -f, --force flag`, filepath)
+
+			f, err := os.Open(filepath)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+		case os.ErrPermission:
+			return errors.New("unable to write file, invalid permissions:" + err.Error())
+
+		}
+	}
+	defer f.Close()
+	n, err := f.WriteString(pass)
+	if err != nil || n != len(pass) {
+		return fmt.Errorf("unable to write to %s, reason: %s", filepath, err.Error())
+	}
+	return nil
+
+}
 
 func main() {
-	if filepath != "" {
-		file, err := os.Create(filepath)
-		if err != nil {
-			log.Fatal("Error creating output file:", err)
-		}
-		defer file.Close()
-	}
 	getFlags()
 
 	cons := checkConstraints(constraints)
@@ -100,15 +147,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if outfile != nil {
-		n, err := outfile.WriteString(pass)
-		if err != nil || n < len(pass) {
-			log.Fatal("error writing generated string to file!:", err)
-		}
-		defer outfile.Close()
-	}
-	if silent == false {
+	if !silent {
 		fmt.Println(pass)
+	}
+	if filepath != "" {
+		if err := writeFile(pass); err != nil {
+			panic(err)
+		}
 	}
 
 	os.Exit(0)
