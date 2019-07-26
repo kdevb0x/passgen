@@ -3,11 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	fp "path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/pflag"
 )
@@ -43,14 +42,14 @@ Examples:
      passgen -l 24 -i lcns -v --output=/home/me/totallyNotAPassword.txt`
 
 var (
-	usage        = usageString
-	includeFlags []string
-	length       int
-	filepath     string // path for -o flag
-	forcef       bool
+	usage = usageString
+
+	includeFlags []string // char groups to include in generation
+	length       int      // number of character in generated string
+	filepath     string   // path for -o flag
+	forcef       bool     // force overwrite output file (if already exists)
 	silent       bool
 	verify       bool // TODO: consider removing this and make it mandatory
-	//
 )
 
 func getFlags() {
@@ -67,9 +66,8 @@ func getFlags() {
 	}
 	pflag.Parse()
 
-	// check if ran without args;
-	// instead of gen and printing a single letter which is useless,
-	// print the usage string and exit.
+	// check if ran without args,
+	// if so, print the usage string and exit.
 	if len(os.Args[:]) <= 1 {
 		pflag.Usage()
 	}
@@ -80,63 +78,80 @@ func getFlags() {
 			switch con {
 			case "l":
 				constraints["lower"] = true
-			case "u":
+			case "c":
 				constraints["upper"] = true
 			case "n":
 				constraints["number"] = true
 			case "s":
 				constraints["symbol"] = true
 			case " ":
-				continue
+				fallthrough
 			default:
 				fmt.Printf("%v: invalid argument", pflag.Args()[1:])
 				fmt.Print(usage)
 				os.Exit(1)
 			}
-			// flag.Visit(func(f *flag.Flag) { constraint[f.Name] = true })
 		}
 	}
 
 }
-func writeFile(pass string, path ...string) error {
-	// throw error is more than 1 filepath
-	if len(path) > 1 {
-		return errors.New("path parameter must be a single filepath!")
-	}
-	var fname = path[0]
-	if fname == "" {
-		fname = "out.txt"
 
+// writeFile writes the generated string to the filepath indicated by path.
+// If path == "", it defaults to `~/passgen_YEAR\MONTH\DAY.txt`
+// NOTE: backslashes ('\') are for readability and are NOT in the actual filename.
+func writeFile(pass string, path string) error {
+	var fname string // final filename
+	// throw error is more than 1 filepath
+	if path == "" {
+		year, month, day := time.Now().Date()
+		dateval := strings.Join([]string{string(year), month.String(), string(day)}, "")
+		path = fmt.Sprintf("passgen_%s", dateval)
+
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		fname = homedir + path
 	}
+
 	var file *os.File
 	var _, err = os.Stat(fname)
 	if err != nil {
-		if os.IsNotExist(err) {
+
+		// check err to see if file exists or not.
+		// since we only care if the file exists or not,
+		// if err is some other error, we just return it as is.
+		switch {
+		case os.IsNotExist(err):
 			log.Printf("creating file %s\n", fname)
 			file, err = os.Create(fname)
 			if err != nil {
 				return errors.New(string("failed to create file; error:" + err.Error()))
 			}
-			file.Close()
-		}
-	}
-	if forcef {
-		// file, err = os.OpenFile(fname, os.O_RDWR|os.O_SYNC, 0600)
-		if err := ioutil.WriteFile(fname, []byte(pass+"\n"), 0600); err != nil {
+			defer file.Close()
+		case os.IsExist(err):
+			if !forcef {
+				fmt.Printf("%s already exists, appending to end of file. To overwrite instead, use -f, --force\n", fname)
+				file, err = os.OpenFile(fname, os.O_RDWR|os.O_TRUNC|os.O_APPEND, os.ModeAppend)
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+
+			}
+		default:
+			// we only care if the file exists or not, so if
+			// err is some other error, we just return it.
 			return err
 		}
-
-	} else {
-		fmt.Printf("%s already exists, appending to end of file. To overwrite instead, use -f, --force flag\n", fname)
-		file, err = os.OpenFile(fname, os.O_RDWR|os.O_SYNC|os.O_APPEND, os.ModeAppend)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
 	}
-	n, err := file.WriteString(string(pass + "\n"))
-	if err != nil || n != len(pass) {
+
+	file, err = os.OpenFile(fname, os.O_RDWR|os.O_CREATE, 0600)
+	defer file.Close()
+
+	var nline = pass + "\n"
+	_, err = file.WriteString(nline)
+	if err != nil {
 		return err
 	}
 
@@ -158,29 +173,37 @@ func main() {
 	if !silent {
 		fmt.Println(pass)
 	}
-	if filepath != "" {
-		if !fp.IsAbs(filepath) {
-			cwd, err := os.Getwd()
-			if err != nil {
-				log.Fatal(err)
+	if len(filepath) > 0 {
+		// NOTE: commenting this out for now so as not to duplicate
+		// functionality, but it may be good for filepath
+		// verification or similar, so I'll keep it around (for now).
 
-			}
-			if err := writeFile(pass, fp.Join(cwd, filepath)); err != nil {
-				// (kdd) TODO: for some reason this returns the
-				// error: "Invalid argument" But otherwise writes
-				// to file and works correctly, so I'm just gonna
-				// comment it out for now, as such my time is
-				// better spent on other things than tracking down
-				// this bug.
+		/*
+		 if !fp.IsAbs(filepath) {
+		 	cwd, err := os.Getwd()
+		 	if err != nil {
+		 		log.Fatal(err)
 
-				// log.Fatal(err)
-			}
-			os.Exit(0)
-		}
-		err := writeFile(pass, filepath)
-		if err != nil {
+		 	}
+		 	if err := writeFile(pass, fp.Join(cwd, filepath)); err != nil {
+		 		// (kdd) TODO: for some reason this returns the
+		 		// error: "Invalid argument" But otherwise writes
+		 		// to file and works correctly, so I'm just gonna
+		 		// comment it out for now, as such my time is
+
+		 		// log.Fatal(err)
+		 	}
+		 	os.Exit(0)
+		 }
+		*/
+
+		if writeFile(pass, filepath); err != nil {
 			log.Fatal(err)
 		}
+
+	}
+	if err := writeFile(pass, ""); err != nil {
+		log.Fatal(err)
 	}
 
 	os.Exit(0)
