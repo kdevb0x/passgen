@@ -5,42 +5,46 @@
 package credfilecrypt
 
 import (
+	"bytes"
 	"fmt"
-	"os"
-	"crypto"
 	"io"
-	"io/ioutil"
-	"encoding/hex"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
-	"github.com/spf13/pflag"
 )
 
 var uname = (credfileLen() % 2) > 0
 var pword = (credfileLen() % 2) == 0
 
-var (
-	fileflag        = pflag.StringP("credfile", "f", "", "encrypted csv file containing credentials")
-	createfileflag  = pflag.BoolP("create", "c", false, "create the credfile at path indicated by -f")
-	createfileforce = pflag.Bool("force", false, "force overwrite of existing file on --create")
-	create = pflag.NewFlagSet()
-)
-
-type CredFile struct {
-	f *os.File
-	Format *CredFileRecord
-	sealed bool
-	enclaveBuffer []byte
+type Credentials struct {
+	f             *os.File
+	CredFormat    *Credential
+	sealed        bool
+	enclaveBuffer *bytes.Buffer
 }
 
-type EncryptedStater interface {
-	// EncryptedState should return the current encrypted state.
+type EncryptedCredentials struct {
+	data   Crypter
+	pwhash []byte // hash of bcrypt password
+}
+
+type Crypter interface {
+	// CiphertextState should return the current encrypted state.
 	// implementations should return true if in ciphertext (encrypted),
 	// or false if in cleartext (unencrypted) state.
-	EncryptedState() bool
+	CiphertextState() bool
+
+	// Encrypt encrypts using pw.
+	// If pw is nil, Encrypt will reuse the pw used last time it was called.
+	// It returns non-nil error if pw == nil and this is the first invocation.
+	Encrypt(pw []byte) error
+
+	// Decrypt decrypts the ciphertext using pw.
+	// Returns a nil error only when decryption is compleltely sucessful.
+	Decrypt(pw []byte) error
 }
 
-type CredFileRecord struct {
+type Credential struct {
 	// where account exists. ex "google" for mail.google.com
 	domain string `json:"host_domain"`
 
@@ -51,13 +55,14 @@ type CredFileRecord struct {
 	generatedPass string `json:"passgen_string"`
 }
 
-func opencredfile(file string) (*CredFile, error) {
-	var f *CredFile
-	f.f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+func OpenCredentialsFile(file string) (*Credentials, error) {
+	var f *Credentials
+	var err error
+	f.f, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 	if err != nil {
 		// TODO: refactor this out into its own function
 		if os.IsExist(err) {
-			if *createfileflag {
+			if credfilepath != "" {
 				if !*createfileforce {
 					return nil, fmt.Errorf("cannot create file %s, it already exists! (pass --force to force overwrite)", file)
 				}
@@ -76,29 +81,25 @@ func opencredfile(file string) (*CredFile, error) {
 	return p, nil
 }
 
-func (f *CredFile) Close() error {
+func (f *Credentials) Close() error {
 	return f.Close()
 	// TODO: refactor this out into its own function
 }
 
-func (f *CredFile) Open(password []byte) error {
+func (f *Credentials) Decrypt(password []byte) error {
 	bcrypt.CompareHashAndPassword()
 	n, err := f.UnmarshalHex(f.enclaveBuffer)
 	if err != nil {
 		return err
 	}
-	
+
 }
 
-func (f *CredFile) EncryptedState() bool {
+func (f *Credentials) CiphertextState() bool {
 	return f.sealed
 }
 
-func (f *CredFile) unmarshalHex(b []byte) (n int, err error) {
+func (f *Credentials) unmarshalHex(b []byte) (n int, err error) {
 	return io.ReadFull(f.f, b)
 
-}
-
-func main() {
-	pflag.Parse()
 }
