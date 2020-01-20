@@ -3,7 +3,7 @@ module github.com/kdevb0x/passgen
 go 1.12
 
 require (
-	github.com/awnumar/memguard v0.21.0 // indirect
+	github.com/awnumar/memguard v0.21.0
 	github.com/diskfs/go-diskfs v0.0.0-20190815060803-4a6168b3bc46 // indirect
 	github.com/google/gousb v0.0.0-20190812193832-18f4c1d8a750 // indirect
 	github.com/kevinburke/go-bindata v3.16.0+incompatible // indirect
