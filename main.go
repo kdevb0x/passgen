@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+<<<<<<< HEAD
 	"strings"
 	"time"
+=======
+	fp "path/filepath"
+>>>>>>> v1.1.2-bugfix
 
 	"github.com/spf13/pflag"
 )
@@ -42,6 +46,7 @@ Examples:
      passgen -l 24 -i lcns -v --output=/home/me/totallyNotAPassword.txt`
 
 var (
+<<<<<<< HEAD
 	usage = usageString
 
 	includeFlags []string // char groups to include in generation
@@ -50,22 +55,33 @@ var (
 	forcef       bool     // force overwrite output file (if already exists)
 	silent       bool
 	verify       bool // TODO: consider removing this and make it mandatory
+=======
+	usage        = usageString
+	includeFlags string
+	length       int
+	filepath     string // path for -o flag
+	forcef       bool
+	silent       bool
+	verifyFlag   bool // TODO: consider removing this and make it mandatory
+	//
+>>>>>>> v1.1.2-bugfix
 )
 
 func getFlags() {
 	pflag.IntVarP(&length, "length", "l", 1, "`length` of the generated output string")
-	pflag.StringArrayVarP(&includeFlags, "include", "i", []string{"l"}, "`character classes` to include in the generation")
+	pflag.StringVarP(&includeFlags, "include", "i", "l", "`character classes` to include in the generation")
 
 	pflag.StringVarP(&filepath, "output", "o", "", "write output string to given FILE")
 	pflag.BoolVarP(&forcef, "force", "f", false, "overwrite file instead of appending if it already exists (implies -o)")
 	pflag.BoolVarP(&silent, "quiet", "q", false, "suppress echoing of generated string to stdout")
-	pflag.BoolVarP(&verify, "verify", "v", true, "ensure that the generated string includes A͟T͟ ͟L͟E͟A͟S͟T͟ O͟N͟E͟ character from each group passed to [--include, -i]")
+	pflag.BoolVarP(&verifyFlag, "verify", "v", true, "ensure that the generated string includes A͟T͟ ͟L͟E͟A͟S͟T͟ O͟N͟E͟ character from each group passed to [--include, -i]")
 	pflag.Usage = func() {
 		fmt.Printf("%s\n", usage)
 		os.Exit(1)
 	}
 	pflag.Parse()
 
+<<<<<<< HEAD
 	// check if ran without args,
 	// if so, print the usage string and exit.
 	if len(os.Args[:]) <= 1 {
@@ -91,7 +107,35 @@ func getFlags() {
 				fmt.Print(usage)
 				os.Exit(1)
 			}
+=======
+	// check if ran without args;
+	// instead of gen and printing a single letter which is useless,
+	// print the usage string and exit.
+	if len(os.Args[:]) <= 1 || len(pflag.Args()[:]) != 0 {
+		pflag.Usage()
+	}
+
+	// for i := 0; i < len(includeFlags); i++ {
+	// cons := strings.Split(includeFlags, "")
+	for _, con := range includeFlags {
+		switch con {
+		case 'l':
+			constraints["lower"] = true
+		case 'u':
+			constraints["upper"] = true
+		case 'n':
+			constraints["number"] = true
+		case 's':
+			constraints["symbol"] = true
+		case ' ':
+			continue
+		default:
+			fmt.Printf("%v: invalid argument", pflag.Args()[1:])
+			fmt.Print(usage)
+			os.Exit(1)
+>>>>>>> v1.1.2-bugfix
 		}
+		// flag.Visit(func(f *flag.Flag) { constraint[f.Name] = true })
 	}
 
 }
@@ -162,10 +206,10 @@ func writeFile(pass string, path string) error {
 func main() {
 	getFlags()
 
-	cons := checkConstraints(constraints)
-	gen := generateChars(cons)
+	cons := generatePool(constraints)
+	gen := generateChars(cons, length)
 
-	pass, err := buildString(gen)
+	pass, err := buildString(gen, verifyFlag) // verify if flag is present
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -173,6 +217,7 @@ func main() {
 	if !silent {
 		fmt.Println(pass)
 	}
+<<<<<<< HEAD
 	if len(filepath) > 0 {
 		// NOTE: commenting this out for now so as not to duplicate
 		// functionality, but it may be good for filepath
@@ -198,6 +243,30 @@ func main() {
 		*/
 
 		if writeFile(pass, filepath); err != nil {
+=======
+	if filepath != "" {
+		if !fp.IsAbs(filepath) {
+			cwd, err := os.Getwd()
+			if err != nil {
+				log.Fatal(err)
+
+			}
+			if err := writeFile(pass, fp.Join(cwd, filepath)); err != nil {
+				// BUG:
+				// (kdd) TODO: for some reason this returns the
+				// error: "Invalid argument" But otherwise writes
+				// to file and works correctly, so I'm just gonna
+				// comment it out for now, as such my time is
+				// better spent on other things than tracking down
+				// this bug.
+
+				// log.Fatal(err)
+			}
+			os.Exit(0)
+		}
+		err := writeFile(pass, filepath)
+		if err != nil {
+>>>>>>> v1.1.2-bugfix
 			log.Fatal(err)
 		}
 
