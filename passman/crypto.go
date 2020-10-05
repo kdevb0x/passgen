@@ -15,13 +15,15 @@ import (
 	"github.com/mr-tron/base58"
 )
 
+
+
 func HashSHA512(key string) string {
 	hsh := sha512.New()
 	hsh.Write([]byte(key))
 	return base58.Encode(hsh.Sum(nil))
 }
 
-func encryptAES(data []byte, pass PassString) []byte {
+func encryptAES(data []byte, pass Pass) []byte {
 	blk, err := aes.NewCipher([]byte(HashSHA512(pass.String())))
 	if err != nil {
 		log.Fatalf("error creating encryption cipher: %s", err)
@@ -34,6 +36,6 @@ func encryptAES(data []byte, pass PassString) []byte {
 	return ctext
 }
 
-func decryptAES(data []byte, pass PassString) []byte {
+func decryptAES(data []byte, pass Pass) []byte {
 
 }

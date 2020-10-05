@@ -14,6 +14,30 @@ const (
 	verifyS = "!@#$%&*"
 )
 
+type Constaints map[string]bool
+
+func (cn *Constaints) Check() []int {
+	if len(cn) > 0 {
+		return checkConstraints(cn)
+	}
+	return nil
+} 
+
+func (cn *Constaints) GenerateChars(include []int) []string {
+	return generateChars(include)
+}
+
+
+func (cn *Constaints) String() string {
+	if cn != nil || len(cn) > 0 {
+		s, err := buildString(cn.GenerateChars(cn.Check()))
+		if err != nil {
+			panic(err)
+		}
+		return s
+	}
+}
+
 var constraints = make(map[string]bool)
 
 func checkConstraints(constraints map[string]bool) []int {
