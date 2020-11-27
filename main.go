@@ -31,15 +31,15 @@ Available Options:
 GROUPS should be given inline without space or comma seperations (ie: -i lun)
 
 Must be one or more of:
-	      	       c    to include capitols [A-Z]
 	      	       l    to include lowercase [a-z]
+	      	       u    to include uppercase (capitols) [A-Z]
 	      	       n    to include numbers [0-9]
 	      	       s    to include symbols [!@#$%&*]
 
 Examples:
      passgen -l 10 -i ln
-     passgen -i cls -o pass.txt -q
-     passgen -l 24 -i lcns -v --output=/home/me/totallyNotAPassword.txt`
+     passgen -i lus -o pass.txt -q
+     passgen -l 24 -i luns -v --output=/home/me/totallyNotAPassword.txt`
 
 var (
 	usage        = usageString
